@@ -42,7 +42,10 @@ body.locked{overflow:hidden}
 .rule{display:flex;align-items:center;gap:12px;max-width:260px;margin:18px auto}
 .rule::before,.rule::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold-2),transparent)}
 .rule i{width:7px;height:7px;transform:rotate(45deg);border:1px solid var(--gold-2)}
-.logo{display:block;width:min(300px,78vw);height:auto;margin:0 auto;filter:drop-shadow(0 2px 0 rgba(0,0,0,.35)) drop-shadow(0 6px 18px rgba(0,0,0,.45))}
+.logo{display:block;width:min(300px,78vw);margin:0 auto;text-align:center}
+.logo-mono{display:block;width:100%;height:auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+.logo-names{margin-top:.55em;font-family:var(--f-serif);font-weight:500;font-size:clamp(.82rem,3.6vw,.98rem);letter-spacing:.34em;text-indent:.34em;text-transform:uppercase;white-space:nowrap;
+  background:linear-gradient(100deg,#D9AE74 0%,#F5DDB0 35%,#E0B47A 60%,#B9783E 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 1px 3px rgba(0,0,0,.45))}
 @media (prefers-reduced-motion:no-preference){.foil{animation:shine 7s ease-in-out infinite alternate}@keyframes shine{from{background-position:0% 0}to{background-position:100% 0}}}
 
 /* Velas: bokeh cálido flotando */
@@ -284,6 +287,7 @@ section.alt{background:var(--grain),linear-gradient(180deg,var(--paper) 0,var(--
 footer{background:var(--band);color:var(--paper);padding-block:30px 80px;text-align:center;position:relative;overflow:hidden}
 footer .eyebrow{color:var(--gold-1);display:block;margin-bottom:18px}
 footer .logo{width:min(240px,64vw)}
+footer .logo-names{font-size:clamp(.7rem,3vw,.82rem)}
 
 
 @media (prefers-reduced-motion:no-preference){
@@ -336,7 +340,7 @@ footer .logo{width:min(240px,64vw)}
   <div class="photo-bg" aria-hidden="true"></div>
   <div class="cover-inner">
     <div class="spacer"></div>
-    <img class="logo" src="logo-dorado.png" alt="Anthony y Alejandra" width="1100" height="757">
+    <div class="logo" role="img" aria-label="Anthony y Alejandra"><img class="logo-mono" src="logo-mono.svg" alt="" width="940" height="590"><div class="logo-names">Anthony y Alejandra</div></div>
     <div class="date foil">21 · 08 · 2027</div>
     <div class="city">Pereira · Risaralda</div>
     <form class="gate" id="gate" novalidate>
@@ -355,7 +359,7 @@ footer .logo{width:min(240px,64vw)}
   <div class="photo-bg" aria-hidden="true"></div>
   <div class="bokeh" data-n="14"></div>
   <div class="col">
-    <img class="logo" src="logo-dorado.png" alt="Anthony y Alejandra" width="1100" height="757">
+    <div class="logo" role="img" aria-label="Anthony y Alejandra"><img class="logo-mono" src="logo-mono.svg" alt="" width="940" height="590"><div class="logo-names">Anthony y Alejandra</div></div>
     <p class="lead">tienen el honor de invitarte a celebrar su matrimonio</p>
   </div>
 </header>
@@ -500,7 +504,7 @@ footer .logo{width:min(240px,64vw)}
   <div class="bokeh" data-n="10"></div>
   <div class="col">
     <span class="eyebrow">Con amor</span>
-    <img class="logo" src="logo-dorado.png" alt="Anthony y Alejandra" width="1100" height="757" loading="lazy">
+    <div class="logo" role="img" aria-label="Anthony y Alejandra"><img class="logo-mono" src="logo-mono.svg" alt="" width="940" height="590"><div class="logo-names">Anthony y Alejandra</div></div>
     <div class="rule"><i></i></div>
     <div class="eyebrow" style="color:var(--sage-light);margin:0">21 · 08 · 2027</div>
   </div>
