@@ -383,7 +383,7 @@ footer .logo{width:min(240px,64vw)}
 </footer>
 </main>
 
-<audio id="song" src="musica.mp3" preload="auto"></audio>
+<audio id="song" src="musica.mp3?v=2" preload="auto"></audio>
 
 <script>
 /* ===================== CONFIGURACIÓN ===================== */
@@ -502,8 +502,8 @@ async function sendRsvp(attending){
 $("rsvp-yes").addEventListener("click", () => sendRsvp(true));
 $("rsvp-no").addEventListener("click", () => sendRsvp(false));
 
-/* ===== Música: arranca al abrir el link, desde el segundo 9, y se repite desde ahí ===== */
-const SONG_START = 9;
+/* ===== Música: arranca al abrir el link, desde el inicio (ya recortada), y se repite desde ahí ===== */
+const SONG_START = 0;
 const song = $("song"); song.volume = .6;
 let songOk = true, songStarted = false;
 song.addEventListener("error", () => { songOk = false; });
