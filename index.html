@@ -158,6 +158,17 @@ body.locked .welcome .col{opacity:0}
 .gate input::placeholder{color:rgba(247,242,232,.5);font-style:italic}
 .gate input:focus{border-color:var(--gold-1);background:rgba(247,242,232,.16)}
 .gate-msg{min-height:1.4em;font-style:italic;font-size:1.05rem;color:#F3D9B1}
+.gate-pick{display:grid;gap:10px;justify-items:center}
+.gate-pick-label{font-family:var(--f-label);font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold-1)}
+.gate-pick-list{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.gate-pick-list button{font-family:var(--f-serif);font-size:1.15rem;padding:10px 18px;border-radius:999px;border:1px solid rgba(246,223,176,.6);background:rgba(247,242,232,.12);color:#FFF8EA;cursor:pointer}
+.gate-pick-list button:hover,.gate-pick-list button:focus-visible{background:rgba(247,242,232,.25);outline:none}
+.who button:disabled{cursor:default;opacity:.75}
+.who button.ok{border-color:var(--olive);color:var(--olive-dark)}
+.who button.ok::before{background:var(--olive);border-color:var(--olive)}
+.who button.no{text-decoration:line-through}
+.rsvp-notice{font-family:var(--f-serif);font-size:1.12rem;color:var(--olive-dark);max-width:34ch;line-height:1.45;padding:12px 16px;border-radius:12px;background:rgba(138,132,97,.12)}
+.rsvp-notice:empty{display:none}
 
 /* ===== Botones ===== */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;font-family:var(--f-label);font-weight:500;font-size:.78rem;letter-spacing:.26em;text-transform:uppercase;text-decoration:none;color:#FFF7EA;
@@ -323,6 +334,7 @@ footer .logo{width:min(240px,64vw)}
       <input id="guest-input" name="nombre" type="text" placeholder="Ej. Natalia Acosta" autocomplete="name" autocapitalize="words" required>
       <button class="btn" type="submit" id="gate-btn">Abrir invitación</button>
       <div class="gate-msg" id="gate-msg" role="status"></div>
+      <div class="gate-pick" id="gate-pick" hidden><div class="gate-pick-label">¿Quién eres?</div><div class="gate-pick-list" id="gate-pick-list"></div></div>
     </form>
   </div>
 </div>
@@ -433,6 +445,7 @@ footer .logo{width:min(240px,64vw)}
       <button class="btn" type="button" id="rsvp-yes">Confirmar asistencia</button>
       <button class="link" type="button" id="rsvp-no">No podré asistir</button>
       <div class="rsvp-msg" id="rsvp-msg" role="status"></div>
+      <div class="rsvp-notice" id="rsvp-notice"></div>
     </div>
     <p class="note table-note">Tu número de mesa te lo entregaremos al llegar a la recepción.</p>
   </div>
@@ -552,7 +565,15 @@ $("gate").addEventListener("submit", async e => {
   startMusic();   // dentro del toque, para que el celular permita el audio
   try {
     const g = await api({name});
-    if (g && g.ok) { guest = g; typedName = name; openInvitation(); }
+    if (g && g.ok && g.pick) {
+      // Entró con el nombre de la invitación (ej. "Familia Acosta Henao"): que elija quién es
+      $("gate").querySelector("label").hidden = true; $("guest-input").hidden = true; $("gate-btn").hidden = true;
+      const list = $("gate-pick-list"); list.textContent = "";
+      g.members.forEach(m => { const b = document.createElement("button"); b.type = "button"; b.textContent = niceName(m.name);
+        b.onclick = () => { guest = g; guest.me = m.name; typedName = m.name; openInvitation(); }; list.appendChild(b); });
+      $("gate-pick").hidden = false;
+    }
+    else if (g && g.ok) { guest = g; typedName = name; openInvitation(); }
     else {
       msg.textContent = g && g.error === "ambiguous"
         ? "Hay más de una persona con ese nombre. Escríbelo con tus dos apellidos."
@@ -573,7 +594,7 @@ function openInvitation(){
   $("pass-n").textContent = n;
   $("pass-label").textContent = n === 1 ? "Pase" : "Pases";
   document.title = "Invitación para " + title + " · Anthony & Alejandra";
-  going = guest.members.map((m, i) => i);
+  going = guest.members.map((m, i) => (m.status === "PENDIENTE" && norm(m.name) === norm(guest.me || (guest.members.length === 1 ? m.name : ""))) ? i : -1).filter(i => i >= 0);
   const remote = !!guest.virtual;
   if (remote) {
     $("reserved").textContent = "Aunque estés lejos, espero nos puedas acompañar en este hermoso momento";
@@ -611,43 +632,84 @@ function openInvitation(){
   }, 600);
 }
 
-/* ===== Confirmación ===== */
+/* ===== Confirmación (por persona) ===== */
+const norm = x => String(x || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+const joinY = a => a.length <= 1 ? (a[0] || "") : a.slice(0, -1).join(", ") + " y " + a[a.length - 1];
+/** Aviso de quién confirmó a quién, visto por la persona que tiene abierta la invitación */
+function rsvpNotice(){
+  const mem = guest.members, me = norm(guest.me), lines = [];
+  const isMe = n => me && norm(n) === me;
+  const byWho = {};
+  mem.forEach(m => { if (m.status === "CONFIRMADA") { const k = m.by || ""; (byWho[k] = byWho[k] || []).push(m); } });
+  Object.keys(byWho).forEach(by => {
+    const list = byWho[by];
+    if (!by) { lines.push("Ya confirmado: " + joinY(list.map(m => firstName(m.name))) + "."); return; }
+    const meBy = isMe(by), who = meBy ? "Confirmaste" : firstName(by) + " confirmó";
+    const self = list.some(m => norm(m.name) === norm(by));
+    const others = list.filter(m => norm(m.name) !== norm(by));
+    const youIn = others.some(m => isMe(m.name));
+    const names = others.filter(m => !isMe(m.name)).map(m => firstName(m.name));
+    if (list.length === mem.length && mem.length > 1) { lines.push(who + (mem.length === 2 ? " la asistencia de los dos." : " la asistencia de toda la familia.")); return; }
+    const own = meBy ? "tu asistencia" : "su asistencia";
+    if (self && !others.length) { lines.push(who + " " + own + "."); return; }
+    const parts = (youIn ? ["la tuya"] : []).concat(names.length ? ["la de " + joinY(names)] : []);
+    if (self) lines.push(who + " " + own + " y " + joinY(parts) + ".");
+    else lines.push(who + " la asistencia de " + joinY((youIn ? ["ti"] : []).concat(names)) + ".");
+  });
+  mem.filter(m => m.status === "NO ASISTE").forEach(m => lines.push(isMe(m.name) ? "Avisaste que no podrás asistir." : firstName(m.name) + " avisó que no podrá asistir."));
+  const pend = mem.filter(m => m.status === "PENDIENTE");
+  if (pend.length && pend.length < mem.length) {
+    const mine = pend.some(m => isMe(m.name)), rest = pend.filter(m => !isMe(m.name)).map(m => firstName(m.name));
+    lines.push(mine ? "Falta tu confirmación" + (rest.length ? " y la de " + joinY(rest) : "") + "." : "Falta por confirmar: " + joinY(rest) + ".");
+  }
+  return lines.join(" ");
+}
 function renderRsvp(){
   const yes = $("rsvp-yes"), no = $("rsvp-no"), msg = $("rsvp-msg");
   const mem = guest ? guest.members : [];
-  const statuses = mem.map(m => m.status);
-  const answered = mem.length && statuses.every(s => s === "CONFIRMADA" || s === "NO ASISTE");
-  const done = (label, text) => { yes.textContent = label; yes.setAttribute("aria-disabled","true"); yes.classList.add("done"); no.hidden = true; $("who-wrap").hidden = true; msg.textContent = text; };
-  if (answered) {
-    const yesNames = mem.filter(m => m.status === "CONFIRMADA").map(m => firstName(m.name));
-    if (!yesNames.length && guest.virtual) return done("Respuesta enviada", "Gracias por avisarnos. Aunque no puedas conectarte, te llevamos en el corazón y te sentiremos con nosotros. Podrás ver las fotos de la boda en nuestro álbum.");
-    if (!yesNames.length) return done("Respuesta enviada", "Gracias por avisarnos. Los vamos a extrañar.".replace("Los", mem.length > 1 ? "Los" : "Te"));
-    if (guest.virtual) return done("Conexión confirmada", "¡Qué alegría tan grande! Aunque haya kilómetros de distancia, tu cariño estará muy cerca de nosotros ese día. Te enviaremos el enlace de la videollamada antes de la boda, y mientras tanto puedes ver y compartir fotos en nuestro álbum.");
-    return done("Asistencia confirmada", mem.length > 1 ? "¡Gracias! Te esperamos: " + yesNames.join(", ") + ". Si necesitas cambiar tu respuesta, escríbenos." : "¡Gracias! Te esperamos. Si necesitas cambiar tu respuesta, escríbenos.");
-  }
-  if ((guest && guest.closed) || Date.now() > RSVP_DEADLINE) return done("Confirmaciones cerradas", "El plazo para confirmar terminó el 21 de julio de 2027.");
-  yes.classList.remove("done"); no.hidden = false;
-  const who = $("who");
-  if (mem.length > 1) {
-    $("who-wrap").hidden = false; who.textContent = "";
+  const pend = mem.map((m, i) => m.status === "PENDIENTE" ? i : -1).filter(i => i >= 0);
+  const meIdx = mem.findIndex(m => norm(m.name) === norm(guest.me || (mem.length === 1 ? m.name : "")));
+  $("rsvp-notice").textContent = mem.length > 1 ? rsvpNotice() : "";
+  const done = (label, text) => { yes.textContent = label; yes.setAttribute("aria-disabled","true"); yes.classList.add("done"); no.hidden = true; $("who-wrap").hidden = mem.length < 2; msg.textContent = text; drawWho(false); };
+  function drawWho(active){
+    const who = $("who"); who.textContent = "";
+    if (mem.length < 2) { $("who-wrap").hidden = true; return; }
+    $("who-wrap").hidden = false;
     mem.forEach((m, i) => {
-      const b = document.createElement("button"); b.type = "button"; b.textContent = niceName(m.name);
-      b.setAttribute("aria-pressed", going.includes(i));
-      b.onclick = () => { going = going.includes(i) ? going.filter(x => x !== i) : going.concat(i).sort(); renderRsvp(); };
+      const b = document.createElement("button"); b.type = "button";
+      const answered = m.status !== "PENDIENTE";
+      b.textContent = niceName(m.name) + (m.status === "CONFIRMADA" ? " ✓" : "");
+      if (answered) { b.disabled = true; b.classList.add(m.status === "CONFIRMADA" ? "ok" : "no"); b.setAttribute("aria-pressed", m.status === "CONFIRMADA"); }
+      else { b.setAttribute("aria-pressed", going.includes(i)); b.disabled = !active;
+        b.onclick = () => { going = going.includes(i) ? going.filter(x => x !== i) : going.concat(i).sort(); renderRsvp(); }; }
       who.appendChild(b);
     });
-  } else $("who-wrap").hidden = true;
-  yes.textContent = busy ? "Enviando…" : (guest && guest.virtual ? "Me conectaré" : "Confirmar asistencia");
-  (busy || (mem.length > 1 && !going.length)) ? yes.setAttribute("aria-disabled","true") : yes.removeAttribute("aria-disabled");
+  }
+  if (!pend.length) {
+    const meM = mem[meIdx], yesAny = mem.some(m => m.status === "CONFIRMADA");
+    if (guest.virtual) return yesAny ? done("Conexión confirmada", "¡Qué alegría tan grande! Aunque haya kilómetros de distancia, tu cariño estará muy cerca de nosotros ese día. Te enviaremos el enlace de la videollamada antes de la boda, y mientras tanto puedes ver y compartir fotos en nuestro álbum.")
+                                     : done("Respuesta enviada", "Gracias por avisarnos. Aunque no puedas conectarte, te llevamos en el corazón y te sentiremos con nosotros. Podrás ver las fotos de la boda en nuestro álbum.");
+    if (!yesAny) return done("Respuesta enviada", mem.length > 1 ? "Gracias por avisarnos. Los vamos a extrañar." : "Gracias por avisarnos. Te vamos a extrañar.");
+    return done("Asistencia confirmada", meM && meM.status === "NO ASISTE" ? "Gracias por avisarnos. Si algo cambia, escríbenos." : "¡Gracias! Te esperamos. Si necesitas cambiar tu respuesta, escríbenos.");
+  }
+  if ((guest && guest.closed) || Date.now() > RSVP_DEADLINE) return done("Confirmaciones cerradas", "El plazo para confirmar terminó el 21 de julio de 2027.");
+  yes.classList.remove("done");
+  document.querySelector(".who-label").textContent = mem.length > 1 ? (guest.virtual ? "¿Quiénes se conectarán? Toca para elegir" : "¿Quiénes asistirán? Toca para elegir") : "";
+  drawWho(!busy);
+  no.hidden = !(meIdx >= 0 && mem[meIdx].status === "PENDIENTE");
+  no.textContent = guest.virtual ? "No podré conectarme" : "No podré asistir";
+  const n = going.length;
+  yes.textContent = busy ? "Enviando…" : (guest.virtual ? "Me conectaré" : "Confirmar asistencia") + (mem.length > 1 && n ? " (" + n + ")" : "");
+  (busy || !n) ? yes.setAttribute("aria-disabled","true") : yes.removeAttribute("aria-disabled");
 }
 async function sendRsvp(attending){
   if (busy || !guest || $("rsvp-yes").classList.contains("done")) return;
   if (attending && $("rsvp-yes").getAttribute("aria-disabled") === "true") return;
   busy = true; renderRsvp(); $("rsvp-msg").textContent = "";
   try {
-    const r = await api({action:"confirm", name: typedName, going: attending ? going.join(",") : ""});
+    const r = await api({action:"confirm", name: typedName, going: attending ? going.join(",") : "", decline: attending ? "" : "1"});
     busy = false;
-    if (r && r.ok) { guest = r; renderRsvp(); return; }
+    if (r && r.ok) { const me = guest.me; guest = r; guest.me = r.me || me; going = []; renderRsvp(); return; }
     renderRsvp();
     $("rsvp-msg").textContent = r && r.error === "closed" ? "El plazo para confirmar ya terminó." : "No pudimos guardar tu respuesta. Intenta de nuevo en un momento.";
   } catch(e) {
