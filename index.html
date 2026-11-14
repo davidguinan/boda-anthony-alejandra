@@ -519,7 +519,6 @@ footer .logo{width:min(240px,64vw)}
     <button type="button" class="vw-btn" id="vw-like" aria-pressed="false" aria-label="Me gusta"><svg viewBox="0 0 24 24"><path d="M12 20.5s-7.5-4.6-9.2-9.3C1.6 7.9 3.8 4.5 7.2 4.5c2 0 3.5 1.1 4.8 2.9 1.3-1.8 2.8-2.9 4.8-2.9 3.4 0 5.6 3.4 4.4 6.7-1.7 4.7-9.2 9.3-9.2 9.3z"/></svg></button>
     <button type="button" class="vw-btn" id="vw-cbtn" aria-label="Comentar"><svg viewBox="0 0 24 24"><path d="M20.5 12a8.5 8.5 0 0 1-12.4 7.6L3.5 21l1.4-4.4A8.5 8.5 0 1 1 20.5 12z"/></svg></button>
     <a class="vw-btn" id="vw-dl" target="_blank" rel="noopener" aria-label="Descargar"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg></a>
-    <button type="button" class="vw-del" id="vw-del" hidden>Eliminar</button>
   </div>
   <div class="vw-likes" id="vw-likes"></div>
   <div class="vw-comments" id="vw-comments"></div>
@@ -619,8 +618,9 @@ function renderRsvp(){
   const done = (label, text) => { yes.textContent = label; yes.setAttribute("aria-disabled","true"); yes.classList.add("done"); no.hidden = true; $("who-wrap").hidden = true; msg.textContent = text; };
   if (answered) {
     const yesNames = mem.filter(m => m.status === "CONFIRMADA").map(m => firstName(m.name));
+    if (!yesNames.length && guest.virtual) return done("Respuesta enviada", "Gracias por avisarnos. Aunque no puedas conectarte, te llevamos en el corazón y te sentiremos con nosotros. Podrás ver las fotos de la boda en nuestro álbum.");
     if (!yesNames.length) return done("Respuesta enviada", "Gracias por avisarnos. Los vamos a extrañar.".replace("Los", mem.length > 1 ? "Los" : "Te"));
-    if (guest.virtual) return done("Conexión confirmada", "¡Gracias! Te esperamos en la videollamada" + (mem.length > 1 ? ": " + yesNames.join(", ") : "") + ". Te enviaremos el enlace antes de la boda.");
+    if (guest.virtual) return done("Conexión confirmada", "¡Qué alegría tan grande! Aunque haya kilómetros de distancia, tu cariño estará muy cerca de nosotros ese día. Te enviaremos el enlace de la videollamada antes de la boda, y mientras tanto puedes ver y compartir fotos en nuestro álbum.");
     return done("Asistencia confirmada", mem.length > 1 ? "¡Gracias! Te esperamos: " + yesNames.join(", ") + ". Si necesitas cambiar tu respuesta, escríbenos." : "¡Gracias! Te esperamos. Si necesitas cambiar tu respuesta, escríbenos.");
   }
   if ((guest && guest.closed) || Date.now() > RSVP_DEADLINE) return done("Confirmaciones cerradas", "El plazo para confirmar terminó el 21 de julio de 2027.");
@@ -675,15 +675,6 @@ function kick(){ startMusic(); }
 function unhook(){ KICK.forEach(t => removeEventListener(t, kick, true)); }
 KICK.forEach(t => addEventListener(t, kick, {capture:true, passive:true}));
 startMusic();
-
-/* ===== Link directo: ?familia abre la invitación de "Familia" sin escribir nombre ===== */
-(function(){
-  const q = new URLSearchParams(location.search);
-  const direct = q.has("familia") ? "Familia" : (q.get("invitado") || "").trim();
-  if (!direct) return;
-  $("guest-input").value = direct;
-  $("gate").requestSubmit ? $("gate").requestSubmit() : $("gate-btn").click();
-})();
 
 /* ===== Video final (aparece cuando exista video.mp4) ===== */
 $("video").addEventListener("loadedmetadata", () => { $("film").hidden = false; });
@@ -805,7 +796,6 @@ const Album = (function(){
       m.appendChild(i);
     }
     $("vw-dl").href = `https://drive.google.com/uc?export=download&id=${p.fileId}`;
-    $("vw-del").hidden = !p.mine;
     renderSocial();
     $("viewer").hidden = false; $("viewer").scrollTop = 0;
   }
@@ -836,11 +826,6 @@ const Album = (function(){
     try { const r = await post({action:"comment", id: p.id, name: typedName, text}); if (!r.ok) throw 0; }
     catch(err) { p.comments.splice(p.comments.indexOf(k), 1); renderSocial(); inp.value = text; }
   }
-  async function del(){
-    const p = current; if (!p || !confirm("¿Eliminar esta publicación?")) return;
-    try { const r = await api({action:"delete", id: p.id, name: typedName}); if (r.ok) { posts = posts.filter(x => x !== p); closePost(); } } catch(e) {}
-  }
-
   function readChunk(blob){
     return new Promise((res, rej) => { const f = new FileReader(); f.onload = () => res(String(f.result).split(",")[1] || ""); f.onerror = rej; f.readAsDataURL(blob); });
   }
@@ -894,7 +879,6 @@ const Album = (function(){
   $("vw-like").addEventListener("click", toggleLike);
   $("vw-cbtn").addEventListener("click", () => $("vw-input").focus());
   $("vw-form").addEventListener("submit", sendComment);
-  $("vw-del").addEventListener("click", del);
   $("al-file").addEventListener("change", e => { upload(e.target.files); e.target.value = ""; });
   document.querySelectorAll(".al-file2").forEach(i => i.addEventListener("change", e => { upload(e.target.files); e.target.value = ""; }));
   addEventListener("keydown", e => { if (e.key === "Escape") { if (!$("viewer").hidden) closePost(); else if (!$("album").hidden) close(); } });
