@@ -135,6 +135,16 @@ body.locked{overflow:hidden}
 .cp-body textarea{width:100%;margin-top:12px;min-height:110px;font-family:var(--f-serif);font-size:1.1rem;padding:12px 14px;border-radius:12px;border:1px solid #DDD3BF;background:#fff;color:var(--ink);resize:vertical}
 .cp-share{border:0;background:none;font-family:var(--f-label);font-weight:500;font-size:.85rem;letter-spacing:.06em;color:var(--cinnamon);cursor:pointer;padding:10px}
 
+/* Itinerario */
+.itin{position:relative;max-width:340px;margin:10px auto 26px;display:grid;gap:22px}
+.itin::before{content:"";position:absolute;left:50%;top:10px;bottom:10px;width:1px;background:linear-gradient(transparent,var(--gold-2),transparent)}
+.itin-row{display:grid;grid-template-columns:1fr 18px 1fr;align-items:center;gap:16px}
+.itin-time{text-align:right;font-family:var(--f-display);font-size:2rem;color:var(--olive-dark);line-height:1}
+.itin-time small{font-family:var(--f-label);font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--cinnamon)}
+.itin-dot{width:12px;height:12px;margin:auto;border-radius:50%;background:var(--paper);border:1.5px solid var(--gold-2);box-shadow:0 0 0 4px var(--paper);position:relative;z-index:1}
+.itin-what{text-align:left;font-family:var(--f-label);font-size:.82rem;letter-spacing:.28em;text-transform:uppercase;color:var(--ink)}
+.itin-note{font-style:italic;font-size:1.25rem;color:var(--olive-dark)!important;max-width:30ch}
+
 /* ===== Portada con foto ===== */
 .cover{position:fixed;inset:0;z-index:50;overflow-y:auto;color:var(--paper);background:var(--night);transition:opacity 1.1s ease,visibility 1.1s}
 .cover.gone{opacity:0;visibility:hidden}
@@ -394,7 +404,7 @@ footer .logo{width:min(240px,64vw)}
       <div class="cal-grid" id="cal"></div>
     </div>
     <div class="when-line">Sábado 21 de agosto</div>
-    <p class="note" style="margin-top:8px">La hora exacta la compartiremos muy pronto.</p>
+    <p class="note" style="margin-top:8px">La ceremonia comienza a las 3:00 p. m.</p>
     <a class="btn ghost" style="margin-top:12px" target="_blank" rel="noopener"
        href="https://calendar.google.com/calendar/render?action=TEMPLATE&amp;text=Boda%20de%20Anthony%20y%20Alejandra&amp;dates=20270821/20270822&amp;location=Pereira%2C%20Risaralda&amp;details=%C2%A1Nos%20casamos!">Agregar a mi calendario</a>
   </div>
@@ -457,7 +467,19 @@ footer .logo{width:min(240px,64vw)}
     <div class="eyebrow">Boomerang</div>
     <h2 class="press" id="t-photos">Nuestro álbum juntos</h2>
     <p>Sube tus fotos y videos, mira los de todos, dales me gusta, comenta y descarga los que más te gusten.</p>
-    <button class="btn" type="button" style="margin-top:10px" id="album-open">Abrir el álbum</button>
+    <button class="btn" type="button" style="margin-top:10px" id="album-open">Abrir Boomerang</button>
+  </div>
+</section>
+
+<section class="block wrap" aria-labelledby="t-itin">
+  <div class="col reveal">
+    <div class="eyebrow">Itinerario</div>
+    <h2 class="press" id="t-itin">El gran día</h2>
+    <div class="itin">
+      <div class="itin-row"><div class="itin-time">3:00 <small>p. m.</small></div><div class="itin-dot"></div><div class="itin-what">Ceremonia</div></div>
+      <div class="itin-row"><div class="itin-time">6:30 <small>p. m.</small></div><div class="itin-dot"></div><div class="itin-what">Recepción</div></div>
+    </div>
+    <p class="itin-note">La puntualidad es una de las cualidades más hermosas de una persona. Llega a tiempo y no te pierdas ni un instante de este momento tan especial.</p>
   </div>
 </section>
 
@@ -534,7 +556,7 @@ footer .logo{width:min(240px,64vw)}
 <script>
 /* ===================== CONFIGURACIÓN ===================== */
 const API = "https://script.google.com/macros/s/AKfycbyjQsmUM_yeG2huq-Lfhk0vW9EzfgjAMW80EnBcPQdqPHBUcpVfPh41AErV8LdaEPg6/exec";   // URL de la app web de Apps Script (termina en /exec)
-const WEDDING = new Date("2027-08-21T16:00:00-05:00");        // hora provisional
+const WEDDING = new Date("2027-08-21T15:00:00-05:00");        // ceremonia 3:00 p. m.
 const RSVP_DEADLINE = new Date("2027-07-21T23:59:59-05:00");
 /* ========================================================= */
 
@@ -807,10 +829,11 @@ const Album = (function(){
   const initials = n => nn(n).split(" ").filter(Boolean).slice(0,2).map(w => w[0]).join("").toUpperCase();
   const h = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
   function ago(t){
-    const m = Math.round((Date.now() - t) / 6e4);
+    const m = Math.floor((Date.now() - t) / 6e4), dt = new Date(t);
     if (m < 1) return "Ahora"; if (m < 60) return "Hace " + m + " min";
-    const hr = Math.round(m / 60); if (hr < 24) return "Hace " + hr + " h";
-    const d = Math.round(hr / 24); return d < 30 ? "Hace " + d + (d === 1 ? " día" : " días") : new Date(t).toLocaleDateString("es-CO", {day:"numeric", month:"long"});
+    const hora = dt.toLocaleTimeString("es-CO", {hour:"numeric", minute:"2-digit", hour12:true});
+    if (m < 24 * 60) return hora;
+    return dt.toLocaleDateString("es-CO", {weekday:"long", day:"numeric", month:"long"}) + ", " + hora;
   }
   async function post(body){ const r = await fetch(API, {method:"POST", body: JSON.stringify(body), redirect:"follow"}); return r.json(); }
   function status(t){ $("al-status").textContent = t || ""; }
