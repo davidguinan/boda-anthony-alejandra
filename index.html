@@ -488,6 +488,7 @@ footer .logo-names{font-size:clamp(.7rem,3vw,.82rem)}
 </section>
 
 <section class="dreams wrap" id="dreams" aria-labelledby="t-dreams">
+  <div class="bokeh" data-n="16"></div>
   <svg class="moon" viewBox="0 0 64 64" aria-hidden="true">
     <defs><linearGradient id="mg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F6DFB0"/><stop offset="1" stop-color="#C9975A"/></linearGradient></defs>
     <path d="M42 6 A26 26 0 1 0 58 44 A21 21 0 1 1 42 6Z" fill="url(#mg)"/>
@@ -813,11 +814,10 @@ document.querySelectorAll(".bokeh").forEach(b => {
   const n = +b.dataset.n || 10;
   for (let i = 0; i < n; i++) {
     const d = document.createElement("i"), size = 6 + Math.random()*22;
-    d.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${6+Math.random()*8}s;animation-delay:${-Math.random()*8}s`;
+    d.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${8 + Math.random()*80}%;--d:${6+Math.random()*8}s;animation-delay:${-Math.random()*8}s`;
     b.appendChild(d);
   }
 });
-(function(){ const s = $("dreams"); for (let i = 0; i < 24; i++) { const d = document.createElement("i"); d.className = "star"; d.style.left = (Math.random()*100) + "%"; d.style.top = (Math.random()*100) + "%"; d.style.animationDelay = (Math.random()*3) + "s"; s.appendChild(d); } })();
 
 
 /* ===================== ÁLBUM SOCIAL (estilo red social) ===================== */
