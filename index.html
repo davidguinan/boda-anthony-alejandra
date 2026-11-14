@@ -110,6 +110,11 @@ body.locked{overflow:hidden}
 /* ===== Portada con foto ===== */
 .cover{position:fixed;inset:0;z-index:50;overflow-y:auto;color:var(--paper);background:var(--night);transition:opacity 1.1s ease,visibility 1.1s}
 .cover.gone{opacity:0;visibility:hidden}
+.cover .cover-inner{transition:opacity .6s ease}
+.cover.opening .cover-inner{opacity:0}
+.cover.swap{transition:none}
+.welcome .col{transition:opacity 1s ease}
+body.locked .welcome .col{opacity:0}
 .photo-bg{position:absolute;inset:0;background:url("foto-pareja.jpg") center 30%/cover no-repeat}
 .photo-bg::after{content:"";position:absolute;inset:0;background:
   linear-gradient(180deg,rgba(51,55,42,.35) 0%,rgba(51,55,42,.15) 30%,rgba(51,55,42,.7) 58%,rgba(42,45,33,.97) 78%,#2A2D21 100%)}
@@ -553,11 +558,19 @@ function openInvitation(){
     $("rsvp-no").textContent = "No podré conectarme";
   }
   renderRsvp();
+  // La foto de bienvenida toma exactamente el tamaño de la portada (en píxeles, fijo),
+  // así las dos fotos coinciden y el cambio no se nota: solo se desvanece el texto.
+  const cover = $("cover"), welcome = document.querySelector(".welcome");
+  welcome.style.minHeight = welcome.style.height = cover.clientHeight + "px";
   $("main").removeAttribute("aria-hidden");
-  $("cover").classList.add("gone");
-  document.body.classList.remove("locked");
   scrollTo(0, 0);
-  setupReveal();
+  cover.classList.add("opening");
+  setTimeout(() => {
+    cover.classList.add("swap", "gone");
+    document.body.classList.remove("locked");
+    scrollTo(0, 0);
+    setupReveal();
+  }, 600);
 }
 
 /* ===== Confirmación ===== */
