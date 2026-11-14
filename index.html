@@ -63,6 +63,7 @@ body.locked{overflow:hidden}
 .album[hidden],.sheet[hidden],.composer[hidden]{display:none!important}
 .al-top{display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top,0px) + 10px) max(12px,env(safe-area-inset-right,0px)) 10px max(12px,env(safe-area-inset-left,0px));border-bottom:1px solid #ECE4D3;background:rgba(255,253,248,.96);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .al-title{flex:1;font-family:var(--f-script);font-size:1.8rem;line-height:1;color:var(--chocolate);white-space:nowrap}
+.al-title.brand{font-family:var(--f-label);font-weight:400;font-size:.82rem;letter-spacing:.42em;text-transform:uppercase;color:var(--cinnamon)}
 .al-title span{font-family:var(--f-display);font-size:1rem;letter-spacing:.12em;color:var(--cinnamon)}
 .ic-btn{width:42px;height:42px;display:grid;place-items:center;border:0;background:none;cursor:pointer;color:var(--ink);border-radius:12px;padding:0;text-decoration:none}
 .ic-btn svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -475,7 +476,7 @@ footer .logo{width:min(240px,64vw)}
 <div class="album" id="album" hidden role="dialog" aria-modal="true" aria-labelledby="album-title">
   <div class="al-top">
     <svg class="app-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="#appIcon"/></svg>
-    <div class="al-title" id="album-title">Boomerang</div>
+    <div class="al-title brand" id="album-title">Boomerang</div>
     <label class="ic-btn" title="Nueva publicación"><input type="file" class="al-pick" accept="image/*,video/*" multiple hidden>
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg><span class="sr">Nueva publicación</span></label>
     <button class="ic-btn" type="button" id="album-close" aria-label="Cerrar álbum"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -586,6 +587,13 @@ function openInvitation(){
     $("rsvp-ask").innerHTML = 'Confírmanos si te conectarás a la videollamada antes del <strong style="font-weight:600">21 de julio de 2027</strong>.';
     document.querySelector(".who-label").textContent = "¿Quiénes se conectarán?";
     $("rsvp-no").textContent = "No podré conectarme";
+  }
+  if (guest.couple) {
+    $("guest-title").textContent = /^alejandra/i.test(guest.members[0].name) ? "Bienvenida, Alejandra" : "Bienvenido, Anthony";
+    $("guest-members").hidden = true;
+    $("reserved").textContent = "Esta es nuestra invitación. Desde aquí también puedes compartir en Boomerang.";
+    $("seats-box").hidden = true;
+    $("confirmar").hidden = true;
   }
   renderRsvp();
   // La foto de bienvenida toma exactamente el tamaño de la portada (en píxeles, fijo),
