@@ -296,9 +296,7 @@ footer .logo{width:min(240px,64vw)}
     <symbol id="appIcon" viewBox="0 0 64 64">
       <defs><linearGradient id="appG" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#673E22"/><stop offset=".45" stop-color="#985F33"/><stop offset=".8" stop-color="#C9975A"/><stop offset="1" stop-color="#F6DFB0"/></linearGradient></defs>
       <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#appG)"/>
-      <rect x="14" y="14" width="36" height="36" rx="11" fill="none" stroke="#FFF8EA" stroke-width="3.4"/>
-      <path d="M32 41s-8-4.8-8-10.2c0-2.8 2-4.6 4.3-4.6 1.6 0 2.9.9 3.7 2.2.8-1.3 2.1-2.2 3.7-2.2 2.3 0 4.3 1.8 4.3 4.6C40 36.2 32 41 32 41z" fill="#FFF8EA"/>
-      <circle cx="43.5" cy="20.5" r="2.4" fill="#FFF8EA"/>
+      <path d="M32 32 C27.5 24.5 14 24.5 14 32 C14 39.5 27.5 39.5 32 32 C36.5 24.5 50 24.5 50 32 C50 39.5 36.5 39.5 32 32 Z" fill="none" stroke="#FFF8EA" stroke-width="5" stroke-linejoin="round"/>
     </symbol>
     <g id="drape">
       <path d="M0 0 H600 V10 C540 70 360 96 300 40 C240 96 60 70 0 10Z" fill="url(#silk)" opacity=".95"/>
@@ -439,7 +437,7 @@ footer .logo{width:min(240px,64vw)}
 <section class="block alt wrap" aria-labelledby="t-photos">
   <div class="col reveal">
     <svg class="app-icon big" viewBox="0 0 64 64" aria-hidden="true"><use href="#appIcon"/></svg>
-    <div class="eyebrow">Momentos A&amp;A</div>
+    <div class="eyebrow">Boomerang</div>
     <h2 class="press" id="t-photos">Nuestro álbum juntos</h2>
     <p>Sube tus fotos y videos, mira los de todos, dales me gusta, comenta y descarga los que más te gusten.</p>
     <button class="btn" type="button" style="margin-top:10px" id="album-open">Abrir el álbum</button>
@@ -474,7 +472,7 @@ footer .logo{width:min(240px,64vw)}
 <div class="album" id="album" hidden role="dialog" aria-modal="true" aria-labelledby="album-title">
   <div class="al-top">
     <svg class="app-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="#appIcon"/></svg>
-    <div class="al-title" id="album-title">Momentos <span>A&amp;A</span></div>
+    <div class="al-title" id="album-title">Boomerang</div>
     <label class="ic-btn" title="Nueva publicación"><input type="file" class="al-pick" accept="image/*,video/*" multiple hidden>
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg><span class="sr">Nueva publicación</span></label>
     <button class="ic-btn" type="button" id="album-close" aria-label="Cerrar álbum"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
