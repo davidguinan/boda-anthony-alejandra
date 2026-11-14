@@ -522,6 +522,15 @@ function unhook(){ KICK.forEach(t => removeEventListener(t, kick, true)); }
 KICK.forEach(t => addEventListener(t, kick, {capture:true, passive:true}));
 startMusic();
 
+/* ===== Link directo: ?familia abre la invitación de "Familia" sin escribir nombre ===== */
+(function(){
+  const q = new URLSearchParams(location.search);
+  const direct = q.has("familia") ? "Familia" : (q.get("invitado") || "").trim();
+  if (!direct) return;
+  $("guest-input").value = direct;
+  $("gate").requestSubmit ? $("gate").requestSubmit() : $("gate-btn").click();
+})();
+
 /* ===== Video final (aparece cuando exista video.mp4) ===== */
 $("video").addEventListener("loadedmetadata", () => { $("film").hidden = false; });
 $("video").addEventListener("play", () => { if (!song.paused) song.pause(); });
