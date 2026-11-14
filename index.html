@@ -175,14 +175,6 @@ footer{background:var(--night);color:var(--paper);padding-block:30px 80px;text-a
 footer .eyebrow{color:var(--gold-1);display:block;margin-bottom:18px}
 footer .logo{width:min(240px,64vw)}
 
-/* Música */
-.music{position:fixed;z-index:40;right:max(16px,calc(env(safe-area-inset-right,0px) + 12px));bottom:calc(env(safe-area-inset-bottom,0px) + 16px);
-  width:54px;height:54px;border-radius:50%;border:1px solid rgba(246,223,176,.55);background:var(--night);color:var(--gold-1);cursor:pointer;display:grid;place-items:center;box-shadow:0 8px 20px rgba(0,0,0,.35)}
-.music .bars{display:flex;gap:3px;align-items:flex-end;height:18px}
-.music .bars i{width:3px;background:var(--gold-1);border-radius:2px;height:6px}
-.music.playing .bars i{animation:eq 1s ease-in-out infinite}
-.music.playing .bars i:nth-child(2){animation-delay:.2s} .music.playing .bars i:nth-child(3){animation-delay:.4s} .music.playing .bars i:nth-child(4){animation-delay:.1s}
-@keyframes eq{0%,100%{height:5px}50%{height:18px}}
 
 @media (prefers-reduced-motion:no-preference){
   .reveal{transition:transform .9s ease,opacity .9s ease}
@@ -391,10 +383,7 @@ footer .logo{width:min(240px,64vw)}
 </footer>
 </main>
 
-<button class="music" id="music" type="button" aria-label="Pausar música" hidden>
-  <span class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-</button>
-<audio id="song" src="musica.mp3" loop preload="auto"></audio>
+<audio id="song" src="musica.mp3" preload="auto"></audio>
 
 <script>
 /* ===================== CONFIGURACIÓN ===================== */
@@ -432,13 +421,11 @@ $("gate").addEventListener("submit", async e => {
     const g = await api({name});
     if (g && g.ok) { guest = g; typedName = name; openInvitation(); }
     else {
-      pauseMusic();
       msg.textContent = g && g.error === "ambiguous"
         ? "Hay más de una persona con ese nombre. Escríbelo con tus dos apellidos."
         : "No encontramos ese nombre en nuestra lista. Revisa cómo lo escribiste o escríbenos y con gusto te ayudamos.";
     }
   } catch(err) {
-    pauseMusic();
     msg.textContent = "No pudimos conectarnos. Revisa tu internet e intenta de nuevo.";
   }
   $("gate-btn").removeAttribute("aria-disabled"); $("gate-btn").textContent = "Abrir invitación";
@@ -515,19 +502,30 @@ async function sendRsvp(attending){
 $("rsvp-yes").addEventListener("click", () => sendRsvp(true));
 $("rsvp-no").addEventListener("click", () => sendRsvp(false));
 
-/* ===== Música ===== */
+/* ===== Música: arranca al abrir el link, desde el segundo 4, y se repite desde ahí ===== */
+const SONG_START = 4;
 const song = $("song"); song.volume = .6;
-let songOk = true;
-song.addEventListener("error", () => { songOk = false; $("music").hidden = true; });
-function setMusicUI(){ const b = $("music"); b.classList.toggle("playing", !song.paused); b.setAttribute("aria-label", song.paused ? "Reproducir música" : "Pausar música"); }
-function startMusic(){ if (!songOk) return; song.play().then(() => { $("music").hidden = false; setMusicUI(); }).catch(() => {}); }
-function pauseMusic(){ song.pause(); try { song.currentTime = 0; } catch(e) {} setMusicUI(); }
-song.addEventListener("play", setMusicUI); song.addEventListener("pause", setMusicUI);
-$("music").addEventListener("click", () => song.paused ? song.play().catch(()=>{}) : song.pause());
+let songOk = true, songStarted = false;
+song.addEventListener("error", () => { songOk = false; });
+function fromStart(){ try { song.currentTime = SONG_START; } catch(e) {} }
+song.addEventListener("loadedmetadata", () => { if (!songStarted) fromStart(); });
+song.addEventListener("ended", () => { fromStart(); song.play().catch(() => {}); });
+function startMusic(){
+  if (!songOk || !song.paused) return;
+  if (!songStarted) fromStart();
+  song.play().then(() => { songStarted = true; unhook(); }).catch(() => {});
+}
+// Los navegadores a veces bloquean el audio hasta el primer toque: si pasa, suena con el primer toque, tecla o desplazamiento.
+const KICK = ["pointerdown","touchstart","keydown","scroll","wheel"];
+function kick(){ startMusic(); }
+function unhook(){ KICK.forEach(t => removeEventListener(t, kick, true)); }
+KICK.forEach(t => addEventListener(t, kick, {capture:true, passive:true}));
+startMusic();
 
 /* ===== Video final (aparece cuando exista video.mp4) ===== */
 $("video").addEventListener("loadedmetadata", () => { $("film").hidden = false; });
 $("video").addEventListener("play", () => { if (!song.paused) song.pause(); });
+$("video").addEventListener("ended", () => song.play().catch(() => {}));
 
 /* ===== Cuenta regresiva ===== */
 const C = 2 * Math.PI * 46;
