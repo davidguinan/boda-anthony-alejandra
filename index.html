@@ -577,7 +577,7 @@ $("gate").addEventListener("submit", async e => {
     else {
       msg.textContent = g && g.error === "ambiguous"
         ? "Hay más de una persona con ese nombre. Escríbelo con tus dos apellidos."
-        : "No encontramos ese nombre en nuestra lista. Revisa cómo lo escribiste o escríbenos y con gusto te ayudamos.";
+        : "No encontramos ese nombre. Escribe tu nombre y apellido (no el de tu familia). Si sigue sin funcionar, escríbenos y con gusto te ayudamos.";
     }
   } catch(err) {
     msg.textContent = "No pudimos conectarnos. Revisa tu internet e intenta de nuevo.";
